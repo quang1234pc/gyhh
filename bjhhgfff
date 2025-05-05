@@ -1,0 +1,47 @@
+function getNil(name, class)
+    for _, v in next, getnilinstances() do
+        if v.ClassName == class and v.Name == name then
+            return v
+        end
+    end
+end
+
+local quakeRemote = getNil("AllPlayer", "Model"):WaitForChild("Powers"):WaitForChild("Quake"):WaitForChild("RemoteEvent")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+local button = Instance.new("TextButton")
+button.Parent = screenGui
+button.Text = "Toggle Quake Spam"
+button.Position = UDim2.new(0.5, -100, 0.5, -25)
+button.Size = UDim2.new(0, 200, 0, 50)
+
+local isSpamming = false
+
+local function startSpam()
+    while isSpamming do
+        wait(0.4)
+        for _, player in ipairs(game.Players:GetPlayers()) do
+            if player ~= game.Players.LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+                local args = {
+                    [1] = -355680.97,
+                    [2] = "QuakePower10",
+                    [3] = "StopCharging",
+                    [4] = workspace:WaitForChild("IslandWindmill"):WaitForChild("Base"):WaitForChild("Grass"):WaitForChild("Grass"),
+                    [5] = player.Character.HumanoidRootPart.CFrame,
+                    [6] = 100,
+                    [7] = Vector3.new(16.550888061523438, 235.30316162109375, 18.840679168701172)
+                }
+                quakeRemote:FireServer(unpack(args))
+            end
+        end
+    end
+end
+
+button.MouseButton1Click:Connect(function()
+    isSpamming = not isSpamming
+    if isSpamming then
+        spawn(startSpam)
+    end
+end)
