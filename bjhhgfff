@@ -1,47 +1,25 @@
-function getNil(name, class)
-    for _, v in next, getnilinstances() do
-        if v.ClassName == class and v.Name == name then
-            return v
-        end
-    end
-end
+-- Roblox Studio Lua Script: Spam QuakePower10 Skill on Player Respawn -- Place this script in a LocalScript under StarterGui or StarterPlayerScripts
 
-local quakeRemote = getNil("AllPlayer", "Model"):WaitForChild("Powers"):WaitForChild("Quake"):WaitForChild("RemoteEvent")
+local Players = game:GetService("Players") local RunService = game:GetService("RunService")
 
-local screenGui = Instance.new("ScreenGui")
-screenGui.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+-- Configuration local spamInterval = 0.4 -- seconds between each spam
 
-local button = Instance.new("TextButton")
-button.Parent = screenGui
-button.Text = "Toggle Quake Spam"
-button.Position = UDim2.new(0.5, -100, 0.5, -25)
-button.Size = UDim2.new(0, 200, 0, 50)
+-- Get the remote local function getNil(name, class) for _, v in next, getnilinstances() do if v.ClassName == class and v.Name == name then return v end end end
 
-local isSpamming = false
+local function getQuakeRemote() local playerModel = getNil("AllPlayer", "Model") local powers = playerModel:WaitForChild("Powers") local quake = powers:WaitForChild("Quake") return quake:WaitForChild("RemoteEvent") end
 
-local function startSpam()
-    while isSpamming do
-        wait(0.4)
-        for _, player in ipairs(game.Players:GetPlayers()) do
-            if player ~= game.Players.LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-                local args = {
-                    [1] = -355680.97,
-                    [2] = "QuakePower10",
-                    [3] = "StopCharging",
-                    [4] = workspace:WaitForChild("IslandWindmill"):WaitForChild("Base"):WaitForChild("Grass"):WaitForChild("Grass"),
-                    [5] = player.Character.HumanoidRootPart.CFrame,
-                    [6] = 100,
-                    [7] = Vector3.new(16.550888061523438, 235.30316162109375, 18.840679168701172)
-                }
-                quakeRemote:FireServer(unpack(args))
-            end
-        end
-    end
-end
+local quakeRemote = getQuakeRemote()
 
-button.MouseButton1Click:Connect(function()
-    isSpamming = not isSpamming
-    if isSpamming then
-        spawn(startSpam)
-    end
-end)
+-- Build argument template (coords will be updated per player) local templateArgs = { [1] = -355680.97, [2] = "QuakePower10", [3] = "StopCharging", [4] = workspace:WaitForChild("IslandWindmill"):WaitForChild("Base"):WaitForChild("Grass"):WaitForChild("Grass"), [5] = CFrame.new(56.99516296386719, 221, -7.185115814208984, 0.6318444013595581, 0.3008441627025604, -0.7143286466598511, 0, 0.9216011762619019, 0.3881382942199707, 0.7750952839851379, -0.24524302780628204, 0.5823085308074951), [6] = 100, [7] = Vector3.new(16.550888061523438, 235.30316162109375, 18.840679168701172), }
+
+-- Utility: fire quake on a target character local function fireQuakeOnCharacter(char) if not char or char == Players.LocalPlayer.Character then return end local hrp = char:FindFirstChild("HumanoidRootPart") if not hrp then return end -- update CFrame and position arguments local args = table.clone(templateArgs) args[5] = CFrame.new(hrp.Position) args[7] = hrp.Position quakeRemote:FireServer(unpack(args)) end
+
+-- Spam loop flag local spamming = false
+
+-- Spawn listener local function onCharacterAdded(char) while spamming do fireQuakeOnCharacter(char) task.wait(spamInterval) end end
+
+-- Button GUI local ScreenGui = Instance.new("ScreenGui") local Button = Instance.new("TextButton") ScreenGui.Name = "SpamQuakeGui" ScreenGui.Parent = Players.LocalPlayer:WaitForChild("PlayerGui")
+
+Button.Size = UDim2.new(0, 150, 0, 50) Button.Position = UDim2.new(0.5, -75, 0.9, -25) Button.Text = "Start Spam Quake" Button.Parent = ScreenGui
+
+Button.MouseButton1Click:Connect(function() spamming = not spamming if spamming then Button.Text = "Stop Spam Quake" -- Connect existing and future characters local char = Players.LocalPlayer.Character if char then spawn(function() onCharacterAdded(char) end) end Players.LocalPlayer.CharacterAdded:Connect(onCharacterAdded) else Button.Text = "Start Spam Quake" end end)
